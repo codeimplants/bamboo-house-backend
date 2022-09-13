@@ -22,4 +22,4 @@ mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
 
 // Routes
 app.use("/", authRouter);
-app.get('/', (req, res) => res.render('./public/index'));
+// app.get('/', (req, res) => res.render('./public/index'));
