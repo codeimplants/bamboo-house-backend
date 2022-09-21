@@ -9,6 +9,7 @@ const port = process.env.PORT || 3000;
 const dbURI = `mongodb+srv://codeimplants:xfYn0CHToHVZrEjK@bamboo-house.pr3f2a5.mongodb.net/bamboo-house`;
 
 const authRouter = require("./api/auth/login");
+const guestRegister = require("./api/user/register");
 
 app.use(express.static('public'));
 app.use(express.json());
@@ -22,4 +23,5 @@ mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
 
 // Routes
 app.use("/", authRouter);
+app.use("/", guestRegister)
 // app.get('/', (req, res) => res.render('./public/index'));
