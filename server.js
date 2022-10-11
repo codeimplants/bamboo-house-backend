@@ -5,11 +5,10 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv')
 const app = express();
 const port = process.env.PORT || 3000;
-
 const dbURI = `mongodb+srv://codeimplants:xfYn0CHToHVZrEjK@bamboo-house.pr3f2a5.mongodb.net/bamboo-house`;
 
-const authRouter = require("./api/auth/login");
-const guestRegister = require("./api/user/register");
+const authentication = require("./api/auth/authentication");
+const guest = require("./api/user/guest");
 
 app.use(express.static('public'));
 app.use(express.json());
@@ -22,6 +21,5 @@ mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
   .catch((err) => console.log(err));
 
 // Routes
-app.use("/", authRouter);
-app.use("/", guestRegister)
-// app.get('/', (req, res) => res.render('./public/index'));
+app.use("/", authentication);
+app.use("/", guest)

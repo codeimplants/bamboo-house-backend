@@ -52,7 +52,6 @@ router.post("/register", [body("email").isEmail(), body("email").not().isEmpty()
       });
     }
 
-    //Check if the password is smaller than 5
     if (req.body.password.length < 5) {
       return res.status(401).json({
         error: "Password cannot be smaller than 5 characters",
@@ -61,10 +60,8 @@ router.post("/register", [body("email").isEmail(), body("email").not().isEmpty()
 
     const emailExist = await authModel.findOne({ email: req.body.email });
 
-    //if the user already exists then Respond that the user with the email already exists
     if (emailExist) return res.status(401).json({ error: "Admin with the E-mail already exists" });
 
-    //HASH THE PASSWORDS BEFORE STORING ON THE DATABASE
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
     const userDetails = {
       name: req.body.name,
@@ -73,7 +70,6 @@ router.post("/register", [body("email").isEmail(), body("email").not().isEmpty()
       role: "admin"
     };
 
-    //Saving the user details into database
     const newUser = new authModel(userDetails);
     newUser.save().then((result) => {
       return res.status(200).json({ msg: "Admin Registered Successfully!!!", details: result });
