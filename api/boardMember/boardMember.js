@@ -24,7 +24,6 @@ router.get("/getBoardMemberDetails", async (req, res) => {
 
 // Update Board Member
 router.post("/updateBoardMember", async (req, res) => {
-
     const boardMemberDetails = {
         position: req.body.position,
         fullname: req.body.fullname,
@@ -33,16 +32,13 @@ router.post("/updateBoardMember", async (req, res) => {
         imgUrl: req.body.imgUrl
     };
 
-    if (req.body._id != null) {
-        const findMember = await boardMemberModel.findByIdAndUpdate({ _id: req.body._id }, boardMemberDetails, function (err, result) {
-            if (err) {
-                return res.status(401).json({ error: "Something Went Wrong!!!" });
-            }
-            else {
-                return res.status(200).json({ message: "Board Member has been updated successfully!!", details: result });
-            }
-        });
-    }
+    const updateBoardMember = await boardMemberModel.findOneAndUpdate(req.body._id, boardMemberDetails, { new: true })
+    updateBoardMember.save().then((ele) => {
+        return res.status(200).json({ msg: "Board Member has been updated successfully!!", details: ele });
+    })
+        .catch((error) => {
+            return res.status(401).json({ error: "Something Went Wrong!!" });
+        })
 });
 
 // Add Board Member 

@@ -61,7 +61,6 @@ router.post("/guestRegister", async (req, res) => {
 
 // Guest Booking 
 router.post("/guestBooking", async (req, res) => {
-
     const bookingExist = await guestBookingModel.findOne({ guest_phone: req.body.guest_phone });
     if (bookingExist) return res.status(401).json({ error: "Booking is already exists with this phone number." });
 
@@ -72,6 +71,56 @@ router.post("/guestBooking", async (req, res) => {
         .catch((error) => {
             return res.status(401).json({ error: "Something Went Wrong!!!" });
         });
+});
+
+// GET all booking data
+router.get("/getAllBookingDetails", async (req, res) => {
+    const getAllBookingDetails = await guestBookingModel.find();
+    if (getAllBookingDetails) {
+        return res.status(200).json(getAllBookingDetails);
+    } else {
+        return res.status(401).json({ error: "Something Went Wrong!!!" });
+    }
+});
+
+// GET all Checked-in Guest data
+router.get("/getAllCheckedInGuest", async (req, res) => {
+    const getAllCheckedInGuest = await guestRegisterModel.find();
+    if (getAllCheckedInGuest) {
+        return res.status(200).json(getAllCheckedInGuest);
+    } else {
+        return res.status(401).json({ error: "Something Went Wrong!!!" });
+    }
+});
+
+// Update Guest Profile
+router.post("/updateGuestProfile", async (req, res) => {
+    const guestProfileDetails = {
+        guest_name: req.body.guest_name,
+        guest_phone: req.body.guest_phone,
+        guest_address: req.body.guest_address,
+        uniqueID_type: req.body.uniqueID_type,
+        uniqueID_url: req.body.uniqueID_url,
+        nationality: req.body.nationality
+    };
+
+    const updateGuestProfile = await guestModel.findOneAndUpdate(req.body._id, guestProfileDetails, { new: true })
+    updateGuestProfile.save().then((ele) => {
+        return res.status(200).json({ msg: "Guest Profile has been updated successfully!!", details: ele });
+    })
+        .catch((error) => {
+            return res.status(401).json({ error: "Something Went Wrong!!" });
+        })
+});
+
+// GET all Existing Guest data
+router.get("/getExistingGuest", async (req, res) => {
+    const getExistingGuest = await guestModel.find();
+    if (getExistingGuest) {
+        return res.status(200).json(getExistingGuest);
+    } else {
+        return res.status(401).json({ error: "Something Went Wrong!!!" });
+    }
 });
 
 // router.post("/addGuest", async (req, res) => {
