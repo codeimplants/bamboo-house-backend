@@ -9,6 +9,7 @@ const dbURI = `mongodb+srv://codeimplants:xfYn0CHToHVZrEjK@bamboo-house.pr3f2a5.
 
 const authentication = require("./api/auth/authentication");
 const guest = require("./api/user/guest");
+const boardMember = require("./api/boardMember/boardMember");
 
 app.use(express.static('public'));
 app.use(express.json());
@@ -23,3 +24,4 @@ mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
 // Routes
 app.use("/", authentication);
 app.use("/", guest)
+app.use("/", boardMember)
