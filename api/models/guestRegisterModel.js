@@ -3,10 +3,10 @@ const mongoose = require("mongoose");
 const guestRegister = new mongoose.Schema({
     isExisting: {
         type: Boolean,
-        default: false
+        required: true
     },
     guestID: {
-        type: String
+        type: mongoose.Schema.ObjectId
     },
     booking_date: {
         type: Date,
@@ -52,16 +52,12 @@ const guestRegister = new mongoose.Schema({
         required: true
     },
     vehicle_number: {
-        type: String,
-        required: true,
+        type: String
     },
     adults: {
         type: [{
             adult_guest_name: {
                 type: String
-            },
-            adult_guest_age: {
-                type: Number,
             }
         }],
         required: true

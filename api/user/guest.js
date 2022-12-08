@@ -6,25 +6,36 @@ const guestModel = require("../models/guestModel");
 
 // Guest Register
 router.post("/guestRegister", async (req, res) => {
-
-    const guestExist = await guestModel.findOne({ guest_phone: req.body.guest_phone });
-    if (guestExist) return res.status(401).json({ error: "Guest with the phone number already exists" });
-
     if (req.body.isExisting === true) {
-        const newGuestRegister = new guestRegisterModel(req.body);
-        newGuestRegister.save().then((result) => {
-            return res.status(200).json({ msg: "Guest Checked-in Successfully!!!", details: result });
-        })
-            .catch((error) => {
-                return res.status(401).json({ error: "Something Went Wrong!!" });
-            });
+        const checkedInExist = await guestRegisterModel.findOne({ guestID: req.body.guestID });
+        if (checkedInExist) {
+            const compareDates = await guestRegisterModel.find({ check_in: { $eq: req.body.check_in }, check_out: { $eq: req.body.check_out } });
+            if (compareDates.length != 0) {
+                return res.status(401).json({ error: "Guest has been already checked in with the same date." });
+            } else {
+                const guestExist = await guestModel.findOne({ _id: req.body.guestID });
+                if (guestExist) {
+                    const newGuest = new guestRegisterModel(req.body);
+                    newGuest.save().then((result) => {
+                        return res.status(200).json({ msg: "Guest Checked-in Successfully!!!", details: result });
+                    })
+                        .catch((error) => {
+                            return res.status(401).json({ error: "Something Went Wrong!!!" });
+                        });
+                } else {
+                    return res.status(401).json({ error: "Guest not exist. Please check guestID!!!" });
+                }
+            }
+        }
     } else if (req.body.isExisting === false) {
+
+        const guestExist = await guestModel.findOne({ guest_phone: req.body.guest_phone });
+        if (guestExist) return res.status(401).json({ error: "Guest with the phone number already exists" });
+
         const newGuest = new guestModel(req.body);
         newGuest.save().then((result) => {
-            console.log("Result", result)
-
             const payload = {
-                isExisting: false,
+                isExisting: req.body.isExisting,
                 guestID: result._id,
                 booking_date: req.body.booking_date,
                 check_in: req.body.check_in,
@@ -52,25 +63,131 @@ router.post("/guestRegister", async (req, res) => {
                         return res.status(401).json({ error: "Something Went Wrong!!" });
                     })
                 })
-                .catch((error) => {
-                    return res.status(401).json({ error: "Something Went Wrong!!" });
-                });
-        });
+
+        })
+            .catch((error) => {
+                return res.status(401).json({ error: "Something Went Wrong!!" });
+            })
     }
 });
 
 // Guest Booking 
 router.post("/guestBooking", async (req, res) => {
-    const bookingExist = await guestBookingModel.findOne({ guest_phone: req.body.guest_phone });
-    if (bookingExist) return res.status(401).json({ error: "Booking is already exists with this phone number." });
+    if (req.body.isExisting == false) {
 
-    const newGuest = new guestBookingModel(req.body);
-    newGuest.save().then((result) => {
-        return res.status(200).json({ msg: "Your booking is confirmed!!!", details: result });
-    })
-        .catch((error) => {
+        const bookingExist = await guestBookingModel.findOne({ guest_phone: req.body.guest_phone });
+        if (bookingExist) return res.status(401).json({ error: "Booking is already exists with this phone number." });
+
+        const isguestExist = await guestModel.findOne({ guest_phone: req.body.guest_phone });
+
+        if (isguestExist) {
+            return res.status(401).json({ error: "Guest is already exist with the phone number." });
+        } else {
+            const newGuest = new guestBookingModel(req.body);
+            newGuest.save().then((result) => {
+                return res.status(200).json({ msg: "Your booking is confirmed!!!", details: result });
+            })
+                .catch((error) => {
+                    return res.status(401).json({ error: "Something Went Wrong!!!" });
+                });
+        }
+
+    } else if (req.body.isExisting == true) {
+        const bookingExist = await guestBookingModel.findOne({ guestID: req.body.guestID });
+
+        if (bookingExist) {
+            const compareDates = await guestBookingModel.find({ check_in: { $eq: req.body.check_in }, check_out: { $eq: req.body.check_out } });
+            if (compareDates.length != 0) {
+                return res.status(401).json({ error: "Booking is already exists with the same date." });
+            } else {
+                const guestExist = await guestModel.findOne({ _id: req.body.guestID });
+                if (guestExist) {
+                    const newGuest = new guestBookingModel(req.body);
+                    newGuest.save().then((result) => {
+                        return res.status(200).json({ msg: "Your booking is confirmed!!!", details: result });
+                    })
+                        .catch((error) => {
+                            return res.status(401).json({ error: "Something Went Wrong!!!" });
+                        });
+                }
+            }
+        } else {
+            const guestExist = await guestModel.findOne({ _id: req.body.guestID });
+            if (guestExist) {
+                const newGuest = new guestBookingModel(req.body);
+                newGuest.save().then((result) => {
+                    return res.status(200).json({ msg: "Your booking is confirmed!!!", details: result });
+                })
+                    .catch((error) => {
+                        return res.status(401).json({ error: "Something Went Wrong!!!" });
+                    });
+            }
+        }
+    }
+});
+
+// In House list 
+router.post("/getInHouseGuest", async (req, res) => {
+    if (req.body.dataRange == "today") {
+        const getInHouseGuestDetails = await guestRegisterModel.find({ $and: [{ check_in: { $lte: new Date() } }, { check_out: { $gte: new Date() } }] })
+        if (getInHouseGuestDetails) {
+            return res.status(200).json(getInHouseGuestDetails);
+        } else {
             return res.status(401).json({ error: "Something Went Wrong!!!" });
-        });
+        }
+    } else if (req.body.dataRange == "tomorrow") {
+        var date = new Date();
+        date.setDate(date.getDate() + 1).toString();
+
+        const getInHouseGuestDetails = await guestRegisterModel.find({ $and: [{ check_in: { $lte: date } }, { check_out: { $gte: date } }] })
+        if (getInHouseGuestDetails) {
+            return res.status(200).json(getInHouseGuestDetails);
+        } else {
+            return res.status(401).json({ error: "Something Went Wrong!!!" });
+        }
+    } else if (req.body.dataRange == "week") {
+        var date = new Date();
+        date.setDate(date.getDate() + 7).toString();
+
+        const getInHouseGuestDetails = await guestRegisterModel.find({ $and: [{ check_in: { $lte: date } }, { check_out: { $gte: new Date() } }] })
+        if (getInHouseGuestDetails) {
+            return res.status(200).json(getInHouseGuestDetails);
+        } else {
+            return res.status(401).json({ error: "Something Went Wrong!!!" });
+        }
+    }
+});
+
+// Arrival List 
+router.post("/getArrivalGuest", async (req, res) => {
+    if (req.body.dataRange == "today") {
+        const getArrivalGuestDetails = await guestBookingModel.find({ check_in: new Date() })
+        if (getArrivalGuestDetails) {
+            return res.status(200).json(getArrivalGuestDetails);
+        } else {
+            return res.status(401).json({ error: "Something Went Wrong!!!" });
+        }
+    } else if (req.body.dataRange == "tomorrow") {
+        var date = new Date();
+        date.setDate(date.getDate() + 1).toString();
+
+        const getArrivalGuestDetails = await guestBookingModel.find({ check_in: { $eq: date } })
+        if (getArrivalGuestDetails) {
+            return res.status(200).json(getArrivalGuestDetails);
+        } else {
+            return res.status(401).json({ error: "Something Went Wrong!!!" });
+        }
+    } else if (req.body.dataRange == "week") {
+        var date = new Date();
+        date.setDate(date.getDate() + 7).toString();
+
+        const getArrivalGuestDetails = await guestBookingModel.find({ $and: [{ check_in: { $lte: date } }, { check_out: { $gte: new Date() } }] })
+        if (getArrivalGuestDetails) {
+            return res.status(200).json(getArrivalGuestDetails);
+        } else {
+            return res.status(401).json({ error: "Something Went Wrong!!!" });
+        }
+    }
 });
 
 // GET all booking data
@@ -123,14 +240,14 @@ router.get("/getExistingGuest", async (req, res) => {
     }
 });
 
-// router.post("/addGuest", async (req, res) => {
-//     const newGuest = new guestModel(req.body);
-//     newGuest.save().then((result) => {
-//         return res.status(200).json({ msg: "Guest Checked-in Successfully!!!", details: result });
-//     })
-//         .catch((error) => {
-//             return res.status(401).json({ error: "Something Went Wrong!!!" });
-//         });
-// });
+router.post("/addGuest", async (req, res) => {
+    const newGuest = new guestModel(req.body);
+    newGuest.save().then((result) => {
+        return res.status(200).json({ msg: "Guest Added Successfully!!!", details: result });
+    })
+        .catch((error) => {
+            return res.status(401).json({ error: "Something Went Wrong!!!" });
+        });
+});
 
 module.exports = router;

@@ -5,15 +5,14 @@ const guestBooking = new mongoose.Schema({
         type: String
     },
     guest_phone: {
-        type: Number,
-        unique: true
+        type: Number
     },
     isExisting: {
         type: Boolean,
-        default: false
+        required: true
     },
     guestID: {
-        type: String
+        type: mongoose.Schema.ObjectId
     },
     booking_date: {
         type: Date,
